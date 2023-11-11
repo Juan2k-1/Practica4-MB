@@ -23,6 +23,7 @@
             <MenuItem class="javax.swing.JMenuItem" name="jMenuItemRealizarConsulta">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Realizar consulta"/>
+                <Property name="actionCommand" type="java.lang.String" value="RealizarConsulta"/>
               </Properties>
               <AuxValues>
                 <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="1"/>

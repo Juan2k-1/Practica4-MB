@@ -45,6 +45,7 @@ public class VistaPrincipal extends javax.swing.JFrame
         jMenuConsultas.setText("Consultas");
 
         jMenuItemRealizarConsulta.setText("Realizar consulta");
+        jMenuItemRealizarConsulta.setActionCommand("RealizarConsulta");
         jMenuConsultas.add(jMenuItemRealizarConsulta);
 
         jMenuBarPrincipal.add(jMenuConsultas);

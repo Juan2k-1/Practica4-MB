@@ -1,7 +1,10 @@
 package Controlador;
 
+import Modelo.Consulta;
+import Modelo.ConsultaTabla;
 import Modelo.Documento;
 import Modelo.DocumentoTabla;
+import Vista.VistaConsultas;
 import Vista.VistaIndexarDocumentos;
 import Vista.VistaMensaje;
 import Vista.VistaMostrarDocumentosIndexados;
@@ -25,7 +28,12 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JTable;
 import org.apache.solr.client.solrj.SolrClient;
+import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.SolrDocument;
+import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrInputDocument;
 
 /**
@@ -34,13 +42,16 @@ import org.apache.solr.common.SolrInputDocument;
  */
 public class ControladorPrincipal implements ActionListener
 {
+
     private VistaMensaje vMensaje;
     private VistaPorDefecto vPorDefecto;
     private VistaPrincipal vPrincipal;
     private VistaIndexarDocumentos vIndexar;
     private VistaSeleccionarFichero vSeleccionarFichero;
     private VistaMostrarDocumentosIndexados vDocumentosIndexados;
+    private VistaConsultas vConsultas;
     private DocumentoTabla dTabla;
+    private ConsultaTabla cTabla;
     private SolrClient solrClient;
     private ArrayList<Documento> documentos;
     private Process process;
@@ -54,7 +65,9 @@ public class ControladorPrincipal implements ActionListener
         this.vIndexar = new VistaIndexarDocumentos();
         this.vDocumentosIndexados = new VistaMostrarDocumentosIndexados();
         this.vSeleccionarFichero = new VistaSeleccionarFichero();
+        this.vConsultas = new VistaConsultas();
         this.dTabla = new DocumentoTabla(vDocumentosIndexados);
+        this.cTabla = new ConsultaTabla(vConsultas);
         this.process = process;
 
         addListeners();
@@ -65,11 +78,13 @@ public class ControladorPrincipal implements ActionListener
         this.vPrincipal.add(vIndexar);
         this.vPrincipal.add(vSeleccionarFichero);
         this.vPrincipal.add(vDocumentosIndexados);
+        this.vPrincipal.add(vConsultas);
 
         this.vPorDefecto.setVisible(true);
         this.vIndexar.setVisible(false);
         this.vSeleccionarFichero.setVisible(false);
         this.vDocumentosIndexados.setVisible(false);
+        this.vConsultas.setVisible(false);
 
         this.vPrincipal.setLocationRelativeTo(null); //Para que la ventana se muestre en el centro de la pantalla
         this.vPrincipal.setVisible(true); // Para hacer la ventana visible
@@ -136,9 +151,35 @@ public class ControladorPrincipal implements ActionListener
                 }
                 break;
             }
-            case "Realizar consulta": {
+            case "RealizarConsulta":
+            {
+                this.vConsultas.setVisible(true);
+                this.vDocumentosIndexados.setVisible(false);
+                this.vPorDefecto.setVisible(false);
+                this.vIndexar.setVisible(false);
+                this.vSeleccionarFichero.setVisible(false);
+                this.vConsultas.jTableConsultas.setModel(cTabla);
+                DiseñoTablaConsultas();
                 break;
             }
+            case "Buscar":
+            {
+                int i = 1;
+                String contenido = this.vConsultas.jTextFieldConsulta.getText();
+                Consulta consulta = new Consulta(i, contenido);
+                ArrayList<Documento> documentos = null;
+                try
+                {
+                    documentos = buscar(consulta);
+                } catch (SolrServerException | IOException ex)
+                {
+                    Logger.getLogger(ControladorPrincipal.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                documentosEncontrados(documentos);
+                i++;
+                break;
+            }
+
             case "Desconectar":
             {
                 try
@@ -151,18 +192,46 @@ public class ControladorPrincipal implements ActionListener
                 }
                 break;
             }
-            case "Cerrar Servidor": {
+            case "Cerrar Servidor":
+            {
                 stopSolrServer();
                 this.vMensaje.MensajeInformacion("Servidor Solr, cerrado con éxito");
                 this.vPrincipal.dispose();
                 break;
             }
-            case "Salir": {
+            case "Salir":
+            {
                 this.vPrincipal.dispose();
                 System.exit(0);
                 break;
             }
         }
+    }
+
+    private ArrayList<Documento> buscar(Consulta consulta) throws SolrServerException, IOException
+    {
+        ArrayList<Documento> documentos = new ArrayList<>();
+        SolrQuery solrQuery = new SolrQuery();
+        String solrUrl = "http://localhost:8983/solr/micoleccion";
+        SolrClient solrClientmicoleccion = new HttpSolrClient.Builder(solrUrl).build();
+        //System.out.println(consulta.getContenido());
+        solrQuery.setQuery("content:" + "What problems and concerns are there in making up descriptive titles?");
+        solrQuery.set("fl", "id,author,title,content,score");
+
+        QueryResponse response = solrClientmicoleccion.query(solrQuery);
+        SolrDocumentList results = response.getResults();
+        for (int i = 0; i < results.size(); i++)
+        {
+            SolrDocument document = results.get(i);
+            Long id = Long.valueOf((String) document.getFieldValue("id"));
+            String author = document.getFieldValue("author").toString();
+            String title = document.getFieldValue("title").toString();
+            String content = document.getFieldValue("content").toString();
+            Float score = (Float) document.getFieldValue("score");
+            Documento documento = new Documento(id, author, title, content, score);
+            documentos.add(documento);
+        }
+        return documentos;
     }
 
     private void addListeners()
@@ -174,6 +243,7 @@ public class ControladorPrincipal implements ActionListener
         this.vPrincipal.jMenuItemRealizarConsulta.addActionListener(this);
         this.vPrincipal.jMenuItemSalir.addActionListener(this);
         this.vIndexar.jButtonSeleccionarFichero.addActionListener(this);
+        this.vConsultas.jButtonBuscar.addActionListener(this);
     }
 
     private ArrayList<Documento> indexarDocumentos(SolrClient solr, String cisiAllFilePath) throws IOException, SolrServerException
@@ -264,6 +334,23 @@ public class ControladorPrincipal implements ActionListener
     }
 
     /**
+     * Diseño de la tabla consultas con el espacio entre columnas y la
+     * prohibición de editar celdas
+     */
+    private void DiseñoTablaConsultas()
+    {
+        //Para no permitir el redimensionamiento de las columnas con el ratón
+        vDocumentosIndexados.jTableMostrarDocumentos.getTableHeader().setResizingAllowed(false);
+        vDocumentosIndexados.jTableMostrarDocumentos.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+
+        vDocumentosIndexados.jTableMostrarDocumentos.getColumnModel().getColumn(0).setPreferredWidth(90);
+        vDocumentosIndexados.jTableMostrarDocumentos.getColumnModel().getColumn(1).setPreferredWidth(90);
+        vDocumentosIndexados.jTableMostrarDocumentos.getColumnModel().getColumn(2).setPreferredWidth(90);
+        vDocumentosIndexados.jTableMostrarDocumentos.getColumnModel().getColumn(3).setPreferredWidth(300);
+        vDocumentosIndexados.jTableMostrarDocumentos.getColumnModel().getColumn(3).setPreferredWidth(90);
+    }
+
+    /**
      * Este metodo rellena la tabla de documentos con los documentos de solr
      */
     private void pideDocumentos()
@@ -271,7 +358,16 @@ public class ControladorPrincipal implements ActionListener
         this.dTabla.vaciarTablaDocumentos();
         this.dTabla.rellenarTablaDocumentos(this.documentos);
     }
-    
+
+    /**
+     * Este metodo rellena la tabla de documentos con los documentos de solr
+     */
+    private void documentosEncontrados(ArrayList<Documento> documents)
+    {
+        this.cTabla.vaciarTablaConsultas();
+        this.cTabla.rellenarTablaConsultas(documents);
+    }
+
     private void stopSolrServer()
     {
         // Ruta al directorio donde se encuentra el script solr.cmd
