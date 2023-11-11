@@ -52,6 +52,7 @@ public class VistaPrincipal extends javax.swing.JFrame
         jMenuDocumentos.setText("Documentos");
 
         jMenuItemIndexar.setText("Indexar documentos");
+        jMenuItemIndexar.setActionCommand("IndexarDocumentos");
         jMenuItemIndexar.addActionListener(new java.awt.event.ActionListener()
         {
             public void actionPerformed(java.awt.event.ActionEvent evt)
@@ -62,6 +63,7 @@ public class VistaPrincipal extends javax.swing.JFrame
         jMenuDocumentos.add(jMenuItemIndexar);
 
         jMenuItemMostrarIndexados.setText("Mostrar documentos indexados");
+        jMenuItemMostrarIndexados.setActionCommand("MostrarDocumentosIndexados");
         jMenuDocumentos.add(jMenuItemMostrarIndexados);
 
         jMenuBarPrincipal.add(jMenuDocumentos);

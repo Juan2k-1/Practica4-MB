@@ -23,6 +23,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>16</maven.compiler.source>
         <maven.compiler.target>16</maven.compiler.target>
-        <exec.mainClass>juan.motores_busqueda.practica4_mb.Practica4_MB</exec.mainClass>
+        <exec.mainClass>App.Practica4_MB.java</exec.mainClass>
     </properties>
 </project>

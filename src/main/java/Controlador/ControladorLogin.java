@@ -18,13 +18,13 @@ import org.apache.solr.client.solrj.impl.HttpSolrClient;
  */
 public class ControladorLogin implements ActionListener
 {
-
     private VistaLogin vLogin;
     private VistaMensaje vMensaje;
     private String solrUrl;
     private HttpSolrClient solrClient;
     private ControladorPrincipal controladorPrincipal;
     private boolean serverRunning;
+    private Process process;
 
     /**
      *
@@ -62,27 +62,12 @@ public class ControladorLogin implements ActionListener
             {
                 if (serverRunning)
                 {
-                    try
-                    {
-                        if (this.vLogin.jComboBoxColeccion.getSelectedItem().toString().toUpperCase().equals("CORPUS2"))
-                        {
-                            this.solrUrl = "http://localhost:8983/solr/CORPUS2";
-                            this.solrClient = new HttpSolrClient.Builder(solrUrl).build();
-                            this.vMensaje.MensajeInformacion("¡Conexión Correcta al servidor Solr, con la coleccion CORPUS2!");
-                            this.controladorPrincipal = new ControladorPrincipal(vMensaje);
-                            this.vLogin.dispose();
-                        } else if (this.vLogin.jComboBoxColeccion.getSelectedItem().toString().toLowerCase().equals("micoleccion"))
-                        {
-                            this.solrUrl = "http://localhost:8983/solr/micoleccion";
-                            this.solrClient = new HttpSolrClient.Builder(solrUrl).build();
-                            this.vMensaje.MensajeInformacion("¡Conexión Correcta al servidor Solr, con la coleccion micoleccion!");
-                            this.controladorPrincipal = new ControladorPrincipal(vMensaje);
-                            this.vLogin.dispose();
-                        }
-                    } catch (NullPointerException ex)
-                    {
-                        this.vMensaje.MensajeDeError("Error, no ha seleccionado ninguna opción");
-                    }
+                    this.solrUrl = "http://localhost:8983/solr/";
+                    this.solrClient = new HttpSolrClient.Builder(solrUrl).build();
+                    this.vMensaje.MensajeInformacion("¡Conexión Correcta al servidor Solr!");
+                    this.controladorPrincipal = new ControladorPrincipal(vMensaje, solrClient, process);
+                    this.vLogin.dispose();
+
                 } else
                 {
                     this.vMensaje.MensajeDeError("Error, el servidor de solr no está iniciado");
@@ -142,7 +127,6 @@ public class ControladorLogin implements ActionListener
                 }
                 // Asegurar que la barra de progreso llegue al 100% al finalizar el proceso
                 SwingUtilities.invokeLater(() -> ControladorLogin.this.vLogin.jProgressBarSolr.setValue(100));
-
             } catch (IOException | InterruptedException e)
             {
                 Logger.getLogger(ControladorLogin.class.getName()).log(Level.SEVERE, e.getMessage(), e);

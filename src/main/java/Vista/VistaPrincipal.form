@@ -41,6 +41,7 @@
             <MenuItem class="javax.swing.JMenuItem" name="jMenuItemIndexar">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Indexar documentos"/>
+                <Property name="actionCommand" type="java.lang.String" value="IndexarDocumentos"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemIndexarActionPerformed"/>
@@ -52,6 +53,7 @@
             <MenuItem class="javax.swing.JMenuItem" name="jMenuItemMostrarIndexados">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Mostrar documentos indexados"/>
+                <Property name="actionCommand" type="java.lang.String" value="MostrarDocumentosIndexados"/>
               </Properties>
               <AuxValues>
                 <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="1"/>

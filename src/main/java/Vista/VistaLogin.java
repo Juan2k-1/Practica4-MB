@@ -29,8 +29,6 @@ public class VistaLogin extends javax.swing.JFrame
     private void initComponents()
     {
 
-        jComboBoxColeccion = new javax.swing.JComboBox<>();
-        jLabelColeccion = new javax.swing.JLabel();
         jLabelTitulo = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
         jButtonConectar = new javax.swing.JButton();
@@ -39,12 +37,6 @@ public class VistaLogin extends javax.swing.JFrame
         jProgressBarSolr = new javax.swing.JProgressBar();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-
-        jComboBoxColeccion.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "CORPUS2", "micoleccion" }));
-        jComboBoxColeccion.setSelectedIndex(-1);
-
-        jLabelColeccion.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        jLabelColeccion.setText("Colección:");
 
         jLabelTitulo.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         jLabelTitulo.setText("Solr Finder");
@@ -66,45 +58,35 @@ public class VistaLogin extends javax.swing.JFrame
             .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(149, 149, 149)
-                        .addComponent(jLabelTitulo))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(116, 116, 116)
-                        .addComponent(jButtonConectar)
-                        .addGap(18, 18, 18)
-                        .addComponent(jButtonSalir))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(83, 83, 83)
-                        .addComponent(jLabel2))
-                    .addGroup(layout.createSequentialGroup()
                         .addGap(102, 102, 102)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(22, 22, 22)
+                                .addComponent(jButtonConectar)
+                                .addGap(18, 18, 18)
+                                .addComponent(jButtonSalir))
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(jButtonIniciarSolr)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jProgressBarSolr, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jLabelColeccion)
-                                .addGap(18, 18, 18)
-                                .addComponent(jComboBoxColeccion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                            .addComponent(jLabel2)))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(157, 157, 157)
+                        .addComponent(jLabelTitulo)))
                 .addContainerGap(68, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(23, 23, 23)
+                .addGap(39, 39, 39)
                 .addComponent(jLabelTitulo)
-                .addGap(35, 35, 35)
-                .addComponent(jLabel2)
-                .addGap(44, 44, 44)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabelColeccion)
-                    .addComponent(jComboBoxColeccion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
+                .addComponent(jLabel2)
+                .addGap(30, 30, 30)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButtonConectar)
                     .addComponent(jButtonSalir))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 51, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 106, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jButtonIniciarSolr)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
@@ -120,9 +102,7 @@ public class VistaLogin extends javax.swing.JFrame
     public javax.swing.JButton jButtonConectar;
     public javax.swing.JButton jButtonIniciarSolr;
     public javax.swing.JButton jButtonSalir;
-    public javax.swing.JComboBox<String> jComboBoxColeccion;
     private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabelColeccion;
     private javax.swing.JLabel jLabelTitulo;
     public javax.swing.JProgressBar jProgressBarSolr;
     // End of variables declaration//GEN-END:variables
