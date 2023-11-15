@@ -11,6 +11,7 @@ import Vista.VistaMostrarDocumentosIndexados;
 import Vista.VistaPorDefecto;
 import Vista.VistaPrincipal;
 import Vista.VistaSeleccionarFichero;
+import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -26,6 +27,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
@@ -64,6 +66,7 @@ public class ControladorPrincipal implements ActionListener
         this.vPrincipal = new VistaPrincipal();
         this.vIndexar = new VistaIndexarDocumentos();
         this.vDocumentosIndexados = new VistaMostrarDocumentosIndexados();
+        
         this.vSeleccionarFichero = new VistaSeleccionarFichero();
         this.vConsultas = new VistaConsultas();
         this.dTabla = new DocumentoTabla(vDocumentosIndexados);
@@ -73,7 +76,9 @@ public class ControladorPrincipal implements ActionListener
         addListeners();
 
         this.vPrincipal.setLayout(new CardLayout());
-
+        //this.vDocumentosIndexados.setLayout(new BorderLayout());
+        //this.vDocumentosIndexados.add(contentPane, BorderLayout.CENTER);
+        
         this.vPrincipal.add(vPorDefecto);
         this.vPrincipal.add(vIndexar);
         this.vPrincipal.add(vSeleccionarFichero);
@@ -212,10 +217,9 @@ public class ControladorPrincipal implements ActionListener
     {
         ArrayList<Documento> documentos = new ArrayList<>();
         SolrQuery solrQuery = new SolrQuery();
-        String solrUrl = "http://localhost:8983/solr/micoleccion";
+        String solrUrl = "http://localhost:8983/solr/CORPUS";
         SolrClient solrClientmicoleccion = new HttpSolrClient.Builder(solrUrl).build();
-        //System.out.println(consulta.getContenido());
-        solrQuery.setQuery("content:" + "What problems and concerns are there in making up descriptive titles?");
+        solrQuery.setQuery("content:" + consulta.getContenido());
         solrQuery.set("fl", "id,author,title,content,score");
 
         QueryResponse response = solrClientmicoleccion.query(solrQuery);
@@ -256,6 +260,7 @@ public class ControladorPrincipal implements ActionListener
         br = Files.newBufferedReader(pathToDocument.toAbsolutePath());
 
         String line;
+        String marcaFinTexto = ".X";
         boolean inDocument = false;
         String id = null;
         String title = null;
@@ -276,7 +281,7 @@ public class ControladorPrincipal implements ActionListener
                     document.addField("title", title);
                     document.addField("author", author);
                     document.addField("content", content.toString());
-                    solr.add("micoleccion", document);
+                    solr.add("CORPUS", document);
                     Documento documento = new Documento(Long.parseLong(id), author, title, content.toString());
                     documents.add(documento);
                 }
@@ -293,8 +298,9 @@ public class ControladorPrincipal implements ActionListener
                 author = br.readLine().trim();
             } else if (line.startsWith(".W"))
             {
-                // Contenido del documento
-                content.append(br.readLine().trim()).append(" ");
+                while((line = br.readLine()) != null && !line.equals(marcaFinTexto)) {
+                    content.append(line.trim()).append(" ");
+                }  
             }
         }
 
@@ -306,13 +312,13 @@ public class ControladorPrincipal implements ActionListener
             document.addField("title", title);
             document.addField("author", author);
             document.addField("content", content.toString());
-            solr.add("micoleccion", document);
+            solr.add("CORPUS", document);
             Documento documento = new Documento(Long.parseLong(id), author, title, content.toString());
             documents.add(documento);
         }
 
         // Enviar los cambios al servidor Solr
-        solr.commit("micoleccion");
+        solr.commit("CORPUS");
         br.close();
         return documents;
     }
@@ -330,7 +336,7 @@ public class ControladorPrincipal implements ActionListener
         vDocumentosIndexados.jTableMostrarDocumentos.getColumnModel().getColumn(0).setPreferredWidth(90);
         vDocumentosIndexados.jTableMostrarDocumentos.getColumnModel().getColumn(1).setPreferredWidth(90);
         vDocumentosIndexados.jTableMostrarDocumentos.getColumnModel().getColumn(2).setPreferredWidth(90);
-        vDocumentosIndexados.jTableMostrarDocumentos.getColumnModel().getColumn(3).setPreferredWidth(300);
+        vDocumentosIndexados.jTableMostrarDocumentos.getColumnModel().getColumn(3).setPreferredWidth(1000);
     }
 
     /**
@@ -346,8 +352,8 @@ public class ControladorPrincipal implements ActionListener
         vDocumentosIndexados.jTableMostrarDocumentos.getColumnModel().getColumn(0).setPreferredWidth(90);
         vDocumentosIndexados.jTableMostrarDocumentos.getColumnModel().getColumn(1).setPreferredWidth(90);
         vDocumentosIndexados.jTableMostrarDocumentos.getColumnModel().getColumn(2).setPreferredWidth(90);
-        vDocumentosIndexados.jTableMostrarDocumentos.getColumnModel().getColumn(3).setPreferredWidth(300);
-        vDocumentosIndexados.jTableMostrarDocumentos.getColumnModel().getColumn(3).setPreferredWidth(90);
+        vDocumentosIndexados.jTableMostrarDocumentos.getColumnModel().getColumn(3).setPreferredWidth(1000);
+        vDocumentosIndexados.jTableMostrarDocumentos.getColumnModel().getColumn(4).setPreferredWidth(90);
     }
 
     /**
@@ -390,7 +396,7 @@ public class ControladorPrincipal implements ActionListener
         {
             // Iniciar el proceso
             process = processBuilder.start();
-            this.process.destroyForcibly();
+            this.process.destroy();
 
             // Esperar a que el proceso termine
             int exitCode = process.waitFor();
