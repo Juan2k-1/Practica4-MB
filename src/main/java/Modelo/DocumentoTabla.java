@@ -60,7 +60,7 @@ public class DocumentoTabla extends DefaultTableModel
      */
     public void rellenarTablaDocumentos(ArrayList<Documento> documentos)
     {
-        Object[] fila = new Object[7];
+        Object[] fila = new Object[4];
         int numRegistros = documentos.size();
         for (int i = 0; i < numRegistros; i++)
         {

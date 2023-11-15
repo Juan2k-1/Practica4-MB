@@ -31,10 +31,9 @@ public class VistaConsultas extends javax.swing.JPanel
 
         jLabel1 = new javax.swing.JLabel();
         jTextFieldConsulta = new javax.swing.JTextField();
-        jLabel2 = new javax.swing.JLabel();
+        jButtonBuscar = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTableConsultas = new javax.swing.JTable();
-        jButtonBuscar = new javax.swing.JButton();
 
         jLabel1.setText("Introduzca su consulta: ");
 
@@ -46,8 +45,7 @@ public class VistaConsultas extends javax.swing.JPanel
             }
         });
 
-        jLabel2.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
-        jLabel2.setText("Solr Finder");
+        jButtonBuscar.setText("Buscar");
 
         jTableConsultas.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][]
@@ -62,9 +60,8 @@ public class VistaConsultas extends javax.swing.JPanel
                 "Title 1", "Title 2", "Title 3", "Title 4"
             }
         ));
+        jTableConsultas.setRowHeight(20);
         jScrollPane1.setViewportView(jTableConsultas);
-
-        jButtonBuscar.setText("Buscar");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -72,35 +69,27 @@ public class VistaConsultas extends javax.swing.JPanel
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 688, Short.MAX_VALUE)
-                .addContainerGap())
-            .addGroup(layout.createSequentialGroup()
-                .addGap(130, 130, 130)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 688, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jTextFieldConsulta, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addComponent(jButtonBuscar))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(180, 180, 180)
-                        .addComponent(jLabel2)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 106, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jButtonBuscar)
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabel2)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addContainerGap(18, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
                     .addComponent(jTextFieldConsulta, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jButtonBuscar))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 366, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 947, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -114,8 +103,7 @@ public class VistaConsultas extends javax.swing.JPanel
     // Variables declaration - do not modify//GEN-BEGIN:variables
     public javax.swing.JButton jButtonBuscar;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JScrollPane jScrollPane1;
+    public javax.swing.JScrollPane jScrollPane1;
     public javax.swing.JTable jTableConsultas;
     public javax.swing.JTextField jTextFieldConsulta;
     // End of variables declaration//GEN-END:variables

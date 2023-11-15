@@ -60,7 +60,7 @@ public class ConsultaTabla extends DefaultTableModel
      */
     public void rellenarTablaConsultas(ArrayList<Documento> documentos)
     {
-        Object[] fila = new Object[7];
+        Object[] fila = new Object[5];
         int numRegistros = documentos.size();
         for (int i = 0; i < numRegistros; i++)
         {

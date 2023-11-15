@@ -66,7 +66,7 @@ public class ControladorPrincipal implements ActionListener
         this.vPrincipal = new VistaPrincipal();
         this.vIndexar = new VistaIndexarDocumentos();
         this.vDocumentosIndexados = new VistaMostrarDocumentosIndexados();
-        
+
         this.vSeleccionarFichero = new VistaSeleccionarFichero();
         this.vConsultas = new VistaConsultas();
         this.dTabla = new DocumentoTabla(vDocumentosIndexados);
@@ -78,7 +78,7 @@ public class ControladorPrincipal implements ActionListener
         this.vPrincipal.setLayout(new CardLayout());
         //this.vDocumentosIndexados.setLayout(new BorderLayout());
         //this.vDocumentosIndexados.add(contentPane, BorderLayout.CENTER);
-        
+
         this.vPrincipal.add(vPorDefecto);
         this.vPrincipal.add(vIndexar);
         this.vPrincipal.add(vSeleccionarFichero);
@@ -94,6 +94,9 @@ public class ControladorPrincipal implements ActionListener
         this.vPrincipal.setLocationRelativeTo(null); //Para que la ventana se muestre en el centro de la pantalla
         this.vPrincipal.setVisible(true); // Para hacer la ventana visible
         this.vPrincipal.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); //Para que la ventana se cierra cuando le doy a cerrar
+
+        this.vConsultas.jScrollPane1.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+        this.vConsultas.jScrollPane1.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
     }
 
     @Override
@@ -222,6 +225,11 @@ public class ControladorPrincipal implements ActionListener
         solrQuery.setQuery("content:" + consulta.getContenido());
         solrQuery.set("fl", "id,author,title,content,score");
 
+        solrQuery.setHighlight(true);
+        solrQuery.addHighlightField("content");  // Campo que se resaltará
+        solrQuery.setHighlightSimplePre("<em><b>");  // Etiqueta de inicio del resaltado
+        solrQuery.setHighlightSimplePost("</em></b>"); // Etiqueta de fin del resaltado
+
         QueryResponse response = solrClientmicoleccion.query(solrQuery);
         SolrDocumentList results = response.getResults();
         for (int i = 0; i < results.size(); i++)
@@ -230,11 +238,14 @@ public class ControladorPrincipal implements ActionListener
             Long id = Long.valueOf((String) document.getFieldValue("id"));
             String author = document.getFieldValue("author").toString();
             String title = document.getFieldValue("title").toString();
-            String content = document.getFieldValue("content").toString();
+            //String content = "<html>" + "<body>" + "<p>" + document.getFieldValue("content").toString() + "</p>" + "</body>" + "</html>";
+            String contentHighlight = "<html>" + "<body>" + "<p>" + response.getHighlighting().get(id.toString()).get("content").get(0) + "</p>" + "</body>" + "</html>";
             Float score = (Float) document.getFieldValue("score");
-            Documento documento = new Documento(id, author, title, content, score);
+            Documento documento = new Documento(id, author, title, contentHighlight, score);
             documentos.add(documento);
         }
+        solrClientmicoleccion.close();
+
         return documentos;
     }
 
@@ -298,9 +309,10 @@ public class ControladorPrincipal implements ActionListener
                 author = br.readLine().trim();
             } else if (line.startsWith(".W"))
             {
-                while((line = br.readLine()) != null && !line.equals(marcaFinTexto)) {
+                while ((line = br.readLine()) != null && !line.equals(marcaFinTexto))
+                {
                     content.append(line.trim()).append(" ");
-                }  
+                }
             }
         }
 
@@ -330,13 +342,13 @@ public class ControladorPrincipal implements ActionListener
     private void DiseñoTablaDocumentos()
     {
         //Para no permitir el redimensionamiento de las columnas con el ratón
-        vDocumentosIndexados.jTableMostrarDocumentos.getTableHeader().setResizingAllowed(false);
+        vDocumentosIndexados.jTableMostrarDocumentos.getTableHeader().setResizingAllowed(true);
         vDocumentosIndexados.jTableMostrarDocumentos.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
 
         vDocumentosIndexados.jTableMostrarDocumentos.getColumnModel().getColumn(0).setPreferredWidth(90);
         vDocumentosIndexados.jTableMostrarDocumentos.getColumnModel().getColumn(1).setPreferredWidth(90);
         vDocumentosIndexados.jTableMostrarDocumentos.getColumnModel().getColumn(2).setPreferredWidth(90);
-        vDocumentosIndexados.jTableMostrarDocumentos.getColumnModel().getColumn(3).setPreferredWidth(1000);
+        vDocumentosIndexados.jTableMostrarDocumentos.getColumnModel().getColumn(3).setPreferredWidth(1500);
     }
 
     /**
@@ -346,14 +358,14 @@ public class ControladorPrincipal implements ActionListener
     private void DiseñoTablaConsultas()
     {
         //Para no permitir el redimensionamiento de las columnas con el ratón
-        vDocumentosIndexados.jTableMostrarDocumentos.getTableHeader().setResizingAllowed(false);
-        vDocumentosIndexados.jTableMostrarDocumentos.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+        vConsultas.jTableConsultas.getTableHeader().setResizingAllowed(true);
+        vConsultas.jTableConsultas.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
 
-        vDocumentosIndexados.jTableMostrarDocumentos.getColumnModel().getColumn(0).setPreferredWidth(90);
-        vDocumentosIndexados.jTableMostrarDocumentos.getColumnModel().getColumn(1).setPreferredWidth(90);
-        vDocumentosIndexados.jTableMostrarDocumentos.getColumnModel().getColumn(2).setPreferredWidth(90);
-        vDocumentosIndexados.jTableMostrarDocumentos.getColumnModel().getColumn(3).setPreferredWidth(1000);
-        vDocumentosIndexados.jTableMostrarDocumentos.getColumnModel().getColumn(4).setPreferredWidth(90);
+        vConsultas.jTableConsultas.getColumnModel().getColumn(0).setPreferredWidth(90);
+        vConsultas.jTableConsultas.getColumnModel().getColumn(1).setPreferredWidth(90);
+        vConsultas.jTableConsultas.getColumnModel().getColumn(2).setPreferredWidth(90);
+        vConsultas.jTableConsultas.getColumnModel().getColumn(3).setPreferredWidth(1500);
+        vConsultas.jTableConsultas.getColumnModel().getColumn(4).setPreferredWidth(90);
     }
 
     /**
