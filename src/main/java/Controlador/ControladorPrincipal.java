@@ -11,12 +11,13 @@ import Vista.VistaMostrarDocumentosIndexados;
 import Vista.VistaPorDefecto;
 import Vista.VistaPrincipal;
 import Vista.VistaSeleccionarFichero;
-import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,14 +30,27 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrResponse;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.client.solrj.impl.XMLResponseParser;
+import org.apache.solr.client.solrj.request.ContentStreamUpdateRequest;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrInputDocument;
+import org.apache.solr.common.util.ContentStreamBase;
+import org.apache.solr.common.util.NamedList;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 /**
  *
@@ -76,8 +90,6 @@ public class ControladorPrincipal implements ActionListener
         addListeners();
 
         this.vPrincipal.setLayout(new CardLayout());
-        //this.vDocumentosIndexados.setLayout(new BorderLayout());
-        //this.vDocumentosIndexados.add(contentPane, BorderLayout.CENTER);
 
         this.vPrincipal.add(vPorDefecto);
         this.vPrincipal.add(vIndexar);
@@ -133,13 +145,16 @@ public class ControladorPrincipal implements ActionListener
                         try
                         {
                             this.documentos = indexarDocumentos(solrClient, cisiAllFilePath);
+                            //this.documentos = parserXMLToDocument();
+                            //indexarDocumentosGate(solrClient);
                             this.vMensaje.MensajeInformacion("¡Documentos indexados con éxito!");
-                        } catch (IOException | SolrServerException ex)
+                        } catch (SolrServerException | IOException  ex)
                         {
-                            Logger.getLogger(ControladorPrincipal.class.getName()).log(Level.SEVERE, null, ex);
+                            Logger.getLogger(ControladorPrincipal.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
                         }
                     }
                 }
+                escribirEnArchivo(documentos);
                 break;
             }
             case "MostrarDocumentosIndexados":
@@ -245,7 +260,6 @@ public class ControladorPrincipal implements ActionListener
             documentos.add(documento);
         }
         solrClientmicoleccion.close();
-
         return documentos;
     }
 
@@ -263,7 +277,6 @@ public class ControladorPrincipal implements ActionListener
 
     private ArrayList<Documento> indexarDocumentos(SolrClient solr, String cisiAllFilePath) throws IOException, SolrServerException
     {
-        //String filePath = "src\\main\\java\\resources\\CISI.ALL";
         Path pathToDocument = null;
         BufferedReader br = null;
 
@@ -417,5 +430,89 @@ public class ControladorPrincipal implements ActionListener
         {
             e.printStackTrace();
         }
+    }
+
+    private void escribirEnArchivo(ArrayList<Documento> documentos)
+    {
+        String rutaArchivo = "CORPUS.txt";
+
+        try ( BufferedWriter writer = new BufferedWriter(new FileWriter(rutaArchivo)))
+        {
+            // Itera sobre la lista de documentos y escribe cada documento en el archivo
+            for (Documento documento : documentos)
+            {
+                writer.write(documento.getId() + "\n");
+                writer.write(documento.getAutor() + "\n");
+                writer.write(documento.getTitulo() + "\n");
+                writer.write(documento.getContenido() + "\n");
+                writer.write("\n"); // Separador entre documentos
+            }
+            System.out.println("La lista de documentos se ha escrito en el archivo correctamente.");
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    private ArrayList<Documento> parserXMLToDocument() throws SAXException, ParserConfigurationException, IOException
+    {
+        // Crear un objeto File que represente el archivo XML
+        File xmlFile = new File("Corpus_gate.xml");
+
+        // Configurar el analizador de documentos XML
+        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+        Document doc = dBuilder.parse(xmlFile);
+
+        // Normalizar el documento
+        doc.getDocumentElement().normalize();
+        
+        ArrayList<Documento> documentos = new ArrayList<>();
+
+        // Obtener la lista de nodos de "documento" en el archivo XML
+        NodeList nodeList = doc.getElementsByTagName("documentos");
+
+        // Iterar sobre la lista de nodos
+        for (int temp = 0; temp < nodeList.getLength(); temp++)
+        {
+            Node node = nodeList.item(temp);
+
+            if (node.getNodeType() == Node.ELEMENT_NODE)
+            {
+                Element element = (Element) node;
+
+                // Obtener los valores de los atributos del elemento "documento"
+                Long id = Long.parseLong(element.getAttribute("id"));
+                String autor = element.getAttribute("autor");
+                String titulo = element.getAttribute("titulo");
+                String contenido = element.getTextContent().trim();
+
+                // Crear una instancia de la clase Documento y agregarla al ArrayList
+                Documento documento = new Documento(id, autor, titulo, contenido);
+                documentos.add(documento);
+            }
+        }
+        return documentos;
+    }
+
+    private void indexarDocumentosGate(SolrClient solr) throws SolrServerException, IOException
+    {
+        String id = null;
+        String title = null;
+        String author = null;
+        String content = null;
+
+        for (Documento documento : documentos)
+        {
+            SolrInputDocument document = new SolrInputDocument();
+            document.addField("id", documento.getId());
+            document.addField("title", documento.getTitulo());
+            document.addField("author", documento.getAutor());
+            document.addField("content", documento.getContenido());
+            solr.add("CORPUS", document);
+        }
+
+        // Enviar los cambios al servidor Solr
+        solr.commit("CORPUS");
     }
 }
