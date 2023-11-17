@@ -145,8 +145,6 @@ public class ControladorPrincipal implements ActionListener
                         try
                         {
                             this.documentos = indexarDocumentos(solrClient, cisiAllFilePath);
-                            //this.documentos = parserXMLToDocument();
-                            //indexarDocumentosGate(solrClient);
                             this.vMensaje.MensajeInformacion("¡Documentos indexados con éxito!");
                         } catch (SolrServerException | IOException  ex)
                         {
@@ -154,7 +152,6 @@ public class ControladorPrincipal implements ActionListener
                         }
                     }
                 }
-                escribirEnArchivo(documentos);
                 break;
             }
             case "MostrarDocumentosIndexados":
@@ -430,89 +427,5 @@ public class ControladorPrincipal implements ActionListener
         {
             e.printStackTrace();
         }
-    }
-
-    private void escribirEnArchivo(ArrayList<Documento> documentos)
-    {
-        String rutaArchivo = "CORPUS.txt";
-
-        try ( BufferedWriter writer = new BufferedWriter(new FileWriter(rutaArchivo)))
-        {
-            // Itera sobre la lista de documentos y escribe cada documento en el archivo
-            for (Documento documento : documentos)
-            {
-                writer.write(documento.getId() + "\n");
-                writer.write(documento.getAutor() + "\n");
-                writer.write(documento.getTitulo() + "\n");
-                writer.write(documento.getContenido() + "\n");
-                writer.write("\n"); // Separador entre documentos
-            }
-            System.out.println("La lista de documentos se ha escrito en el archivo correctamente.");
-        } catch (IOException e)
-        {
-            e.printStackTrace();
-        }
-    }
-
-    private ArrayList<Documento> parserXMLToDocument() throws SAXException, ParserConfigurationException, IOException
-    {
-        // Crear un objeto File que represente el archivo XML
-        File xmlFile = new File("Corpus_gate.xml");
-
-        // Configurar el analizador de documentos XML
-        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-        Document doc = dBuilder.parse(xmlFile);
-
-        // Normalizar el documento
-        doc.getDocumentElement().normalize();
-        
-        ArrayList<Documento> documentos = new ArrayList<>();
-
-        // Obtener la lista de nodos de "documento" en el archivo XML
-        NodeList nodeList = doc.getElementsByTagName("documentos");
-
-        // Iterar sobre la lista de nodos
-        for (int temp = 0; temp < nodeList.getLength(); temp++)
-        {
-            Node node = nodeList.item(temp);
-
-            if (node.getNodeType() == Node.ELEMENT_NODE)
-            {
-                Element element = (Element) node;
-
-                // Obtener los valores de los atributos del elemento "documento"
-                Long id = Long.parseLong(element.getAttribute("id"));
-                String autor = element.getAttribute("autor");
-                String titulo = element.getAttribute("titulo");
-                String contenido = element.getTextContent().trim();
-
-                // Crear una instancia de la clase Documento y agregarla al ArrayList
-                Documento documento = new Documento(id, autor, titulo, contenido);
-                documentos.add(documento);
-            }
-        }
-        return documentos;
-    }
-
-    private void indexarDocumentosGate(SolrClient solr) throws SolrServerException, IOException
-    {
-        String id = null;
-        String title = null;
-        String author = null;
-        String content = null;
-
-        for (Documento documento : documentos)
-        {
-            SolrInputDocument document = new SolrInputDocument();
-            document.addField("id", documento.getId());
-            document.addField("title", documento.getTitulo());
-            document.addField("author", documento.getAutor());
-            document.addField("content", documento.getContenido());
-            solr.add("CORPUS", document);
-        }
-
-        // Enviar los cambios al servidor Solr
-        solr.commit("CORPUS");
     }
 }
