@@ -4,7 +4,9 @@ import Modelo.Consulta;
 import Modelo.ConsultaTabla;
 import Modelo.Documento;
 import Modelo.DocumentoTabla;
+import Vista.VistaCargarFicheroConsultas;
 import Vista.VistaConsultas;
+import Vista.VistaIndexarConsultas;
 import Vista.VistaIndexarDocumentos;
 import Vista.VistaMensaje;
 import Vista.VistaMostrarDocumentosIndexados;
@@ -17,40 +19,32 @@ import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrResponse;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
-import org.apache.solr.client.solrj.impl.XMLResponseParser;
-import org.apache.solr.client.solrj.request.ContentStreamUpdateRequest;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrInputDocument;
-import org.apache.solr.common.util.ContentStreamBase;
-import org.apache.solr.common.util.NamedList;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 /**
  *
@@ -65,23 +59,28 @@ public class ControladorPrincipal implements ActionListener
     private VistaIndexarDocumentos vIndexar;
     private VistaSeleccionarFichero vSeleccionarFichero;
     private VistaMostrarDocumentosIndexados vDocumentosIndexados;
+    private VistaCargarFicheroConsultas vCargarFicheroConsulta;
+    private VistaIndexarConsultas vIndexarConsultas;
     private VistaConsultas vConsultas;
     private DocumentoTabla dTabla;
     private ConsultaTabla cTabla;
     private SolrClient solrClient;
     private ArrayList<Documento> documentos;
     private Process process;
+    private String nombreCore;
 
     public ControladorPrincipal(VistaMensaje vMensaje, SolrClient solrClient, Process process)
     {
         this.vMensaje = vMensaje;
+        this.nombreCore = "CORPUS";
         this.solrClient = solrClient;
         this.vPorDefecto = new VistaPorDefecto();
         this.vPrincipal = new VistaPrincipal();
         this.vIndexar = new VistaIndexarDocumentos();
         this.vDocumentosIndexados = new VistaMostrarDocumentosIndexados();
-
+        this.vCargarFicheroConsulta = new VistaCargarFicheroConsultas();
         this.vSeleccionarFichero = new VistaSeleccionarFichero();
+        this.vIndexarConsultas = new VistaIndexarConsultas();
         this.vConsultas = new VistaConsultas();
         this.dTabla = new DocumentoTabla(vDocumentosIndexados);
         this.cTabla = new ConsultaTabla(vConsultas);
@@ -96,12 +95,16 @@ public class ControladorPrincipal implements ActionListener
         this.vPrincipal.add(vSeleccionarFichero);
         this.vPrincipal.add(vDocumentosIndexados);
         this.vPrincipal.add(vConsultas);
+        this.vPrincipal.add(vCargarFicheroConsulta);
+        this.vPrincipal.add(vIndexarConsultas);
 
         this.vPorDefecto.setVisible(true);
         this.vIndexar.setVisible(false);
         this.vSeleccionarFichero.setVisible(false);
         this.vDocumentosIndexados.setVisible(false);
         this.vConsultas.setVisible(false);
+        this.vCargarFicheroConsulta.setVisible(false);
+        this.vIndexarConsultas.setVisible(false);
 
         this.vPrincipal.setLocationRelativeTo(null); //Para que la ventana se muestre en el centro de la pantalla
         this.vPrincipal.setVisible(true); // Para hacer la ventana visible
@@ -146,7 +149,7 @@ public class ControladorPrincipal implements ActionListener
                         {
                             this.documentos = indexarDocumentos(solrClient, cisiAllFilePath);
                             this.vMensaje.MensajeInformacion("¡Documentos indexados con éxito!");
-                        } catch (SolrServerException | IOException  ex)
+                        } catch (SolrServerException | IOException ex)
                         {
                             Logger.getLogger(ControladorPrincipal.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
                         }
@@ -168,6 +171,90 @@ public class ControladorPrincipal implements ActionListener
                     this.vDocumentosIndexados.jTableMostrarDocumentos.setModel(dTabla);
                     DiseñoTablaDocumentos();
                     pideDocumentos();
+                }
+                break;
+            }
+            case "CargarFicheroConsultas":
+            {
+                this.vPorDefecto.setVisible(false);
+                this.vIndexar.setVisible(false);
+                this.vDocumentosIndexados.setVisible(false);
+                this.vSeleccionarFichero.setVisible(false);
+                this.vIndexarConsultas.setVisible(true);
+                break;
+            }
+            case "SeleccionarFicheroConsultas":
+            {
+                this.vPorDefecto.setVisible(false);
+                this.vIndexar.setVisible(false);
+                this.vDocumentosIndexados.setVisible(false);
+                this.vSeleccionarFichero.setVisible(false);
+                this.vIndexarConsultas.setVisible(false);
+                this.vCargarFicheroConsulta.setVisible(true);
+                int seleccion = this.vCargarFicheroConsulta.jFileChooserConsultas.showOpenDialog(null);
+                if (seleccion == JFileChooser.APPROVE_OPTION)
+                {
+                    File ficheroSeleccionado = this.vCargarFicheroConsulta.jFileChooserConsultas.getSelectedFile();
+                    String cisiQueryFilePath = ficheroSeleccionado.getAbsolutePath();
+                    this.vIndexarConsultas.jTextFieldFichero.setText(cisiQueryFilePath);
+                    if (cisiQueryFilePath == null)
+                    {
+                        this.vMensaje.MensajeDeError("Error, ruta vacía");
+                    } else
+                    {
+                        try
+                        {
+                            indexarConsultas(cisiQueryFilePath);
+                            this.vMensaje.MensajeInformacion("¡Consultas indexados con éxito!");
+                        } catch (IOException ex)
+                        {
+                            Logger.getLogger(ControladorPrincipal.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+                        }
+
+                    }
+                }
+                break;
+            }
+            case "Generar fichero de evaluación":
+            {
+                String solrUrl = "http://localhost:8983/solr/" + this.nombreCore;
+                SolrClient solrClientmicoleccion = new HttpSolrClient.Builder(solrUrl).build();
+                //String cisiQueryFilePath = "src\\main\\java\\resources\\CISI.QRY";
+                String cisiQueryFilePath = this.vIndexarConsultas.jTextFieldFichero.getText();
+                String trecTopFilePath = "trec_solr_file.trec";
+
+                try
+                {
+                    Map<Integer, String> queries = indexarConsultas(cisiQueryFilePath);
+                    BufferedWriter writer = new BufferedWriter(new FileWriter(trecTopFilePath));
+
+                    for (Map.Entry<Integer, String> entry : queries.entrySet())
+                    {
+                        int queryId = entry.getKey();
+                        System.out.println(queryId);
+                        String queryString = entry.getValue();
+                        System.out.println(queryString);
+
+                        SolrQuery solrQuery = new SolrQuery();
+                        solrQuery.setQuery("content:" + queryString);
+                        solrQuery.set("fl", "id,score");
+
+                        List<String> relevantDocuments = performSolrSearch(solrClientmicoleccion, solrQuery);
+
+                        // Escribe los resultados en el archivo trec_top_file
+                        for (int i = 0; i < relevantDocuments.size(); i++)
+                        {
+                            writer.write(queryId + " ");
+                            writer.write(relevantDocuments.get(i) + "\n");
+                        }
+                    }
+                    writer.close();
+                    solrClientmicoleccion.close();
+                    this.vMensaje.MensajeInformacion("¡Fichero generado con éxito!");
+                    System.out.println("Los resultados se han escrito en " + trecTopFilePath);
+                } catch (IOException | SolrServerException ex)
+                {
+                    Logger.getLogger(ControladorPrincipal.class.getName()).log(Level.SEVERE, ex.getMessage(), e);
                 }
                 break;
             }
@@ -228,11 +315,28 @@ public class ControladorPrincipal implements ActionListener
         }
     }
 
+    private List<String> performSolrSearch(SolrClient solr, SolrQuery query)
+            throws SolrServerException, IOException
+    {
+        // Realiza la búsqueda en Solr y devuelve una lista de documentos relevantes
+        QueryResponse response = solr.query(query);
+        SolrDocumentList results = response.getResults();
+        List<String> relevantDocumentIds = new ArrayList<>();
+        int ranking = 1;
+        for (SolrDocument document : results)
+        {
+            String trecLine = "QO" + " " + (String) document.getFieldValue("id") + " " + ranking + " " + document.getFieldValue("score").toString() + " " + "ETSI";
+            relevantDocumentIds.add(trecLine);
+            ranking++;
+        }
+        return relevantDocumentIds;
+    }
+
     private ArrayList<Documento> buscar(Consulta consulta) throws SolrServerException, IOException
     {
         ArrayList<Documento> documentos = new ArrayList<>();
         SolrQuery solrQuery = new SolrQuery();
-        String solrUrl = "http://localhost:8983/solr/CORPUS";
+        String solrUrl = "http://localhost:8983/solr/" + this.nombreCore;
         SolrClient solrClientmicoleccion = new HttpSolrClient.Builder(solrUrl).build();
         solrQuery.setQuery("content:" + consulta.getContenido());
         solrQuery.set("fl", "id,author,title,content,score");
@@ -267,9 +371,12 @@ public class ControladorPrincipal implements ActionListener
         this.vPrincipal.jMenuItemIndexar.addActionListener(this);
         this.vPrincipal.jMenuItemMostrarIndexados.addActionListener(this);
         this.vPrincipal.jMenuItemRealizarConsulta.addActionListener(this);
+        this.vPrincipal.jMenuItemCargarFicheroConsultas.addActionListener(this);
         this.vPrincipal.jMenuItemSalir.addActionListener(this);
         this.vIndexar.jButtonSeleccionarFichero.addActionListener(this);
+        this.vIndexarConsultas.jButtonSeleccionarFichero.addActionListener(this);
         this.vConsultas.jButtonBuscar.addActionListener(this);
+        this.vPrincipal.jMenuItemGenerarFichero.addActionListener(this);
     }
 
     private ArrayList<Documento> indexarDocumentos(SolrClient solr, String cisiAllFilePath) throws IOException, SolrServerException
@@ -345,6 +452,59 @@ public class ControladorPrincipal implements ActionListener
         return documents;
     }
 
+    private Map<Integer, String> indexarConsultas(String filePath) throws IOException
+    {
+        Map<Integer, String> queries = new HashMap<>();
+        BufferedReader reader = new BufferedReader(new FileReader(filePath));
+        String line;
+        boolean readingContent = false;
+        int currentQueryId = -1;
+        StringBuilder currentQuery = new StringBuilder();
+
+        while ((line = reader.readLine()) != null)
+        {
+            if (line.startsWith(".I"))
+            {
+                if (currentQueryId != -1)
+                {
+                    //queries.put(currentQueryId, currentQuery.toString().trim());
+                    String encodedQuery = URLEncoder.encode(currentQuery.toString().trim(), "UTF-8");
+                    //String encodedQuery = removeColon(currentQuery.toString().trim());
+                    queries.put(currentQueryId, encodedQuery);
+                }
+                currentQueryId = Integer.parseInt(line.split("\\s+")[1]);
+                currentQuery = new StringBuilder();
+            } else if (line.startsWith(".A"))
+            {
+                readingContent = false;
+            } else if (line.startsWith(".T"))
+            {
+                readingContent = false;
+            } else if (line.startsWith(".W"))
+            {
+                readingContent = true;
+                continue;
+            } else if (line.startsWith(".B"))
+            {
+                readingContent = false;
+            } else if (readingContent)
+            {
+                currentQuery.append(line).append(" ");
+            }
+        }
+
+        // Add the last query
+        if (currentQueryId != -1)
+        {
+            String encodedQuery = URLEncoder.encode(currentQuery.toString().trim(), "UTF-8");
+            //queries.put(currentQueryId, currentQuery.toString().trim());
+            encodedQuery = encodedQuery.replace(":", "");
+            queries.put(currentQueryId, encodedQuery);
+        }
+        reader.close();
+        return queries;
+    }
+
     /**
      * Diseño de la tabla documentos con el espacio entre columnas y la
      * prohibición de editar celdas
@@ -401,14 +561,16 @@ public class ControladorPrincipal implements ActionListener
         // Ruta al directorio donde se encuentra el script solr.cmd
         String solrBinPath = "C:\\Users\\juald\\Downloads\\solr-9.3.0-slim\\solr-9.3.0-slim\\bin\\";
 
-        // Comando para detener el servidor Solr
         String command = "solr.cmd";
-        String argument = "stop -all";
+        String argument1 = "stop";
+        String argument2 = "-p";
+        String argument3 = "8983";
 
-        // Construir la lista de comandos
         List<String> commands = new ArrayList<>();
         commands.add(solrBinPath + command);
-        commands.add(argument);
+        commands.add(argument1);
+        commands.add(argument2);
+        commands.add(argument3);
 
         // Configurar ProcessBuilder
         ProcessBuilder processBuilder = new ProcessBuilder(commands);
@@ -418,8 +580,18 @@ public class ControladorPrincipal implements ActionListener
         {
             // Iniciar el proceso
             process = processBuilder.start();
-            this.process.destroy();
-
+            try ( BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream())))
+            {
+                String line;
+                while ((line = reader.readLine()) != null)
+                {
+                    System.out.println(line);
+                }
+            } catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+            Thread.sleep(5000); // Espera 5 segundos (ajusta según sea necesario)
             // Esperar a que el proceso termine
             int exitCode = process.waitFor();
             System.out.println("Proceso Solr terminado con código de salida: " + exitCode);
